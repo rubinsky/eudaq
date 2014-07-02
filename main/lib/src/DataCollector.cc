@@ -26,6 +26,7 @@ namespace eudaq {
       m_dataserver->SetCallback(TransportCallback(this, &DataCollector::DataHandler));
 	  m_thread=std::unique_ptr<std::thread>(new std::thread(DataCollector_thread,this));
       EUDAQ_DEBUG("Instantiated datacollector with name: " + name);
+      m_thread=std::unique_ptr<std::thread>(new std::thread(DataCollector_thread,this));
       EUDAQ_DEBUG("Listen address=" + to_string(m_dataserver->ConnectionString()));
       CommandReceiver::StartThread();
     }
