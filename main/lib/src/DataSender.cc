@@ -13,6 +13,7 @@ namespace eudaq {
 
   void DataSender::Connect(const std::string & server) {
     delete m_dataclient;
+    std::cout << "Connecting to server: " << server << std::endl;
     m_dataclient = TransportFactory::CreateClient(server);
 
     std::string packet;
