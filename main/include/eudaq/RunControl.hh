@@ -18,6 +18,41 @@ namespace eudaq {
   /** Implements the functionality of the Run Control application.
    *
    */
+  namespace ConnectionInfoHelpers{
+
+    enum DeviceType{logCollector,DataCollector,Producer};
+
+    DeviceType getDeviceType(const ConnectionInfo& dev);
+
+    bool isDefaultDataCollector(const ConnectionInfo& dev);
+
+  }
+
+  class dataCollecterContainerClass{
+
+  public:
+
+    dataCollecterContainerClass(const std::string& dataCollectorAdresse, const std::string& NameOfAssoiatedProducer, size_t connectionAdress, bool isDefault) :m_dataaddr(dataCollectorAdresse), m_name(NameOfAssoiatedProducer), m_conection_adress(connectionAdress), m_isDefaultDC(isDefault)
+    {
+
+    }
+    bool isDefault() const { return m_isDefaultDC; }
+    
+  
+    std::string m_dataaddr;    // TCP address of dataCollector
+    std::string m_name;        // name of data collector <==> name of producer assosiated to this datacollector
+    size_t m_conection_adress; // Connection number to which this dc is connected
+    bool m_isDefaultDC;
+  };
+
+  bool isEqual(const dataCollecterContainerClass& dc, const std::string& name){
+    if (dc.m_name==name)
+    {
+      return true;
+    }
+    return false;
+  }
+
   class DLLEXPORT RunControl {
     public:
       explicit RunControl(const std::string & listenaddress = "");
@@ -44,6 +79,7 @@ namespace eudaq {
     private:
       void InitLog(const ConnectionInfo & id);
       void InitData(const ConnectionInfo & id);
+      void sendDatacollectorToProducer();
       void InitOther(const ConnectionInfo & id);
       void SendCommand(const std::string & cmd, const std::string & param = "",
           const ConnectionInfo & id = ConnectionInfo::ALL);
@@ -55,10 +91,12 @@ namespace eudaq {
     protected:
       int32_t m_runnumber;   ///< The current run number
       TransportServer * m_cmdserver; ///< Transport for sending commands
-	std::unique_ptr<std::thread> m_thread;
+	    std::unique_ptr<std::thread> m_thread;
       size_t m_idata, m_ilog;
       std::string m_logaddr; // address of log collector
-      std::map<size_t,std::string> m_dataaddr; // map of data collector addresses
+      std::vector<dataCollecterContainerClass> m_dataCollecotrs;
+      
+      //std::map<size_t,std::string> m_dataaddr; // map of data collector addresses
       int64_t m_runsizelimit;
       bool m_stopping, m_busy, m_producerbusy;
   };
