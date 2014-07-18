@@ -69,8 +69,9 @@ namespace eudaq {
 
   void DataCollector::OnConfigure(const Configuration & param) {
     m_config = param;
+    std::string filepattern = "../data/run$6R_" + get_name()+"$X";
     m_writer =  std::shared_ptr<eudaq::FileWriter>(FileWriterFactory::Create(m_config.Get("FileType", "")));
-    m_writer->SetFilePattern(m_config.Get("FilePattern", ""));
+    m_writer->SetFilePattern(m_config.Get("FilePattern", filepattern.c_str()));
   }
 
   void DataCollector::OnPrepareRun(unsigned runnumber) {

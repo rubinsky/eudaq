@@ -40,6 +40,7 @@ namespace eudaq {
       void Process(int timeout);
       void CommandThread();
       void StartThread();
+      const std::string& get_name(){ return m_name; }
     protected:
       Status m_status;
       TransportClient * m_cmdclient;
