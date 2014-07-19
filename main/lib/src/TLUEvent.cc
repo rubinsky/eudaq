@@ -17,6 +17,7 @@ namespace eudaq {
     if (m_extratimes.size() > 0) {
       os << " [" << m_extratimes.size() << " extra]";
     }
+    os << std::endl;
   }
 
   void TLUEvent::Serialize(Serializer & ser) const {

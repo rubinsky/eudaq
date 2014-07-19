@@ -4,7 +4,7 @@ from PyEUDAQWrapper import * # load the ctypes wrapper
 from time import sleep
 
 print "Starting RunControl"
-prc = PyRunControl("44000") # listen to address 44000
+prc = PyRunControl("tcp://44000") # listen to address 44000
 
 # wait for more than one active connection to appear
 while prc.NumConnections < 2:

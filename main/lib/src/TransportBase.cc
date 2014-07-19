@@ -1,4 +1,5 @@
 #include "eudaq/TransportBase.hh"
+
 #include <ostream>
 #include <iostream>
 
@@ -80,18 +81,18 @@ namespace eudaq {
   {
     // acquire mutex...
     if (timeout == -1) timeout = DEFAULT_TIMEOUT;
-    //std::cout << "DEBUG: SendReceive: Acquiring mutex" << std::endl;
+    std::cout << "DEBUG: SendReceive: Acquiring mutex" << std::endl;
     MutexLock m(m_mutex, false);
     try {
       m.Lock();
     } catch (const eudaq::Exception &) {
       // swallow it
     }
-    //std::cout << "DEBUG: SendReceive: got mutex" << std::endl;
+    std::cout << "DEBUG: SendReceive: got mutex. " << std::endl;
     SendPacket(sendpacket, connection);
-    //std::cout << "DEBUG: SendReceive sent packet " << sendpacket << std::endl;
+    std::cout << "DEBUG: SendReceive sent packet " << sendpacket << " to " << connection.GetName() << std::endl;
     bool ret = ReceivePacket(recpacket, timeout, connection);
-    //std::cout << "SendReceivePacket() return '" << *recpacket << "' " << (ret ? "true" : "false") << std::endl;
+    std::cout << "SendReceivePacket() return '" << *recpacket << "' " << (ret ? "true" : "false") << std::endl;
     return ret;
   }
 

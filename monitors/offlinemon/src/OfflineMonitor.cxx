@@ -42,7 +42,7 @@ int main(int, char ** argv) {
 
 		reader.addFileReader(op.GetArg(i), ipat.Value());
 	}
-      mCorrelations correlator;
+          mCorrelations correlator;
 	  correlator.open_confFile(confFile.Value().c_str());
 	  correlator.SetFilePattern(opat.Value());
 	  correlator.setRunNumber(reader.RunNumber());
@@ -66,11 +66,11 @@ int main(int, char ** argv) {
 		  {
 			 
 			  			  auto ev=reader.GetDetectorEvent().GetSubEvent<Event>(0);
-				  		  std::cout <<ev->GetSubType()<<":  "<<ev->GetEventNumber()<<"   ";
+				  		  if(ev != 0)  std::cout <<ev->GetSubType()<<":  "<<ev->GetEventNumber()<<"   ";
 						  auto ev1=reader.GetDetectorEvent().GetSubEvent<Event>(1);
-						  std::cout <<ev1->GetSubType()<<":  "<<ev1->GetEventNumber()<<"   ";			  
+						  if(ev1 != 0) std::cout <<ev1->GetSubType()<<":  "<<ev1->GetEventNumber()<<"   ";			  
 						  auto ev2=reader.GetDetectorEvent().GetSubEvent<Event>(2);
-						  std::cout <<ev->GetSubType()<<" countedtrigger:  "<<eudaq::PluginManager::GetTriggerID(*ev2)<<"   GetEventNumber:" <<ev->GetEventNumber();
+						  if(ev2 != 0 ) std::cout <<ev->GetSubType()<<" countedtrigger:  "<<eudaq::PluginManager::GetTriggerID(*ev2)<<"   GetEventNumber:" <<ev->GetEventNumber();
 
 	
 			

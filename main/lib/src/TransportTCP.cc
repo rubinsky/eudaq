@@ -41,6 +41,7 @@ at some places we have constructions like:
 #include "eudaq/Time.hh"
 #include "eudaq/Utils.hh"
 #include <iostream>
+#include "eudaq/Logger.hh"
 
 
 #if EUDAQ_PLATFORM_IS(WIN32) || EUDAQ_PLATFORM_IS(MINGW)
@@ -330,9 +331,17 @@ namespace eudaq {
 
     sockaddr_in addr;
     memset(&addr, 0, sizeof addr);
+
     addr.sin_family = AF_INET;
     addr.sin_addr.s_addr = htonl(INADDR_ANY);
     addr.sin_port = htons(m_port);
+
+//    while( bind(m_srvsock, (sockaddr *) &addr, sizeof addr)) {
+ //      closesocket(m_srvsock);
+//       EUDAQ_INFO( "Failed to bind socket: " + to_string(m_port) );
+//       m_port++;
+//       addr.sin_port = htons(m_port);
+//    }
 
     if (bind(m_srvsock, (sockaddr *) &addr, sizeof addr)) {
       closesocket(m_srvsock);
@@ -342,6 +351,9 @@ namespace eudaq {
       closesocket(m_srvsock);
       EUDAQ_THROW_NOLOG(LastSockErrorString("Failed to listen on socket: " + param));
     }
+
+    EUDAQ_INFO( "You have bound to socket: " + param );
+
   }
 
   TCPServer::~TCPServer() {
@@ -383,14 +395,14 @@ namespace eudaq {
   }
 
   void TCPServer::SendPacket(const unsigned char * data, size_t len, const ConnectionInfo & id, bool duringconnect) {
-    //std::cout << "SendPacket to " << id << std::endl;
+    std::cout << "SendPacket to " << id << std::endl;
     for (size_t i = 0; i < m_conn.size(); ++i) {
-      //std::cout << "- " << i << ": " << *m_conn[i] << std::flush;
+      std::cout << "- " << i << ": " << *m_conn[i] << std::flush;
       if (id.Matches(*m_conn[i])) {
         ConnectionInfoTCP * inf =
           dynamic_cast<ConnectionInfoTCP *>(m_conn[i].get());
         if (inf && inf->IsEnabled() && (inf->GetState() > 0 || duringconnect)) {
-          //std::cout << " ok" << std::endl;
+          std::cout << " ok" << std::endl;
           do_send_packet(inf->GetFd(), data, len);
         } //else std::cout << " not quite" << std::endl;
       } //else std::cout << " nope" << std::endl;
@@ -543,16 +555,16 @@ namespace eudaq {
     }
 
     void TCPClient::SendPacket(const unsigned char * data, size_t len, const ConnectionInfo & id, bool) {
-      //std::cout << "Sending packet to " << id << std::endl;
+//      std::cout << "Sending packet to " << id << std::endl;
       if (id.Matches(m_buf)) {
-        //std::cout << " ok" << std::endl;
+//        std::cout << " ok" << std::endl;
         do_send_packet(m_buf.GetFd(), data, len);
       }
-      //std::cout << "Sent" << std::endl;
+//      std::cout << "Sent" << std::endl;
     }
 
     void TCPClient::ProcessEvents(int timeout) {
-      //std::cout << "ProcessEvents()" << std::endl;
+//      std::cout << "ProcessEvents()" << std::endl;
 #if DEBUG_NOTIMEOUT == 0
       Time t_start = Time::Current(); /*t_curr = t_start,*/
 #endif
@@ -570,7 +582,7 @@ namespace eudaq {
 #endif
 
 
-	//std::cout << "Select result=" << result << std::endl;
+//	std::cout << "Select result=" << result << std::endl;
 
         bool donereading = false;
         do {
@@ -607,12 +619,12 @@ namespace eudaq {
 #else
         t_remain = Time(0, timeout) + t_start - Time::Current();
 #endif
-        //std::cout << "Remaining time in ProcessEvents(): " << t_remain << (t_remain > Time(0) ? " >0" : " <0")<< std::endl;
+//        std::cout << "Remaining time in ProcessEvents(): " << t_remain << (t_remain > Time(0) ? " >0" : " <0")<< std::endl;
 	if ( !(t_remain > Time(0))){
 	  debug_transport("%s\n","Reached Timeout in ProcessEvents().");
 	}
       } while (!done && t_remain > Time(0));
-      //std::cout << "done" << std::endl;
+//      std::cout << "done" << std::endl;
     }
 
     TCPClient::~TCPClient() {

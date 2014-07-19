@@ -140,6 +140,9 @@ namespace eudaq {
 
   void RunControl::SendCommand(const std::string & cmd, const std::string & param,
       const ConnectionInfo & id) {
+//    EUDAQ_INFO("SendCommand to " + id.GetName() );
+    EUDAQ_INFO("SendCommand " + cmd + " " + param + " to " + id.GetName() );
+ 
     PseudoMutex m(m_busy);
     std::string packet(cmd);
     if (param.length() > 0) {
@@ -150,6 +153,7 @@ namespace eudaq {
 
   std::string RunControl::SendReceiveCommand(const std::string & cmd, const std::string & param,
       const ConnectionInfo & id) {
+    EUDAQ_INFO("SendReceiveCommand " + cmd + " " + param + " to " + id.GetName() );
     PseudoMutex m(m_busy);
     mSleep(500); // make sure there are no pending replies
     std::string packet(cmd);
@@ -163,11 +167,14 @@ namespace eudaq {
 
   void RunControl::CommandThread() {
     while (!m_done) {
-      m_cmdserver->Process(100000);
+//     EUDAQ_INFO("CommandThread " );
+     m_cmdserver->Process(100000);
     }
   }
 
   void RunControl::CommandHandler(TransportEvent & ev) {
+   
+    EUDAQ_INFO("CommandHandler , type: " + ev.packet );
     //std::cout << "Event: ";
     switch (ev.etype) {
       case (TransportEvent::CONNECT):
@@ -186,6 +193,7 @@ namespace eudaq {
         if (m_ilog  != (size_t)-1 && ev.id.Matches(GetConnection(m_ilog)))  m_ilog  = (size_t)-1;
         break;
       case (TransportEvent::RECEIVE):
+        EUDAQ_INFO("CommandHandler , type::RECEIVE - " + ev.packet );
         //std::cout << "Receive: " << ev.packet << std::endl;
         if (ev.id.GetState() == 0) { // waiting for identification
           // check packet
@@ -262,6 +270,8 @@ namespace eudaq {
 	EUDAQ_INFO("Additional DataCollector connecting: "+id.GetName());
       }
     }
+
+    EUDAQ_INFO("InitData with ConnectionInfo id : " + id.GetName() );
 
     // this DC is default DC if unnamed or no other DC is yet connected
     bool isDefaultDC = false;

@@ -4,6 +4,7 @@
 #include <ostream>
 #include <string>
 #include <map>
+#include "eudaq/Logger.hh"
 
 // All transport header files must be included here
 #include "eudaq/TransportNULL.hh"
@@ -67,6 +68,7 @@ namespace eudaq {
       param = std::string(name, i+3);
     }
     map_t::const_iterator it = TransportMap().find(proto);
+    EUDAQ_INFO("CreateServer: " + name + " proto:" + proto + " param:" + param);
     if (it == TransportMap().end()) EUDAQ_THROW("Unknown protocol: " + proto);
     return (it->second.serverfactory)(param);
   }
@@ -79,6 +81,7 @@ namespace eudaq {
       param = std::string(name, i+3);
     }
     map_t::const_iterator it = TransportMap().find(proto);
+    EUDAQ_INFO("CreateClient: " + name + " proto:" + proto + " param:" + param);
     if (it == TransportMap().end()) EUDAQ_THROW("Unknown protocol: " + proto);
     return (it->second.clientfactory)(param);
   }

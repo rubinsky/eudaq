@@ -45,12 +45,12 @@ namespace eudaq {
 
   void DataSender::SendEvent(const Event &ev) {
     if (!m_dataclient) EUDAQ_THROW("Transport not connected error");
-    //EUDAQ_DEBUG("Serializing event");
+    EUDAQ_DEBUG("Serializing event");
     BufferSerializer ser;
     ev.Serialize(ser);
-    //EUDAQ_DEBUG("Sending event");
+    EUDAQ_DEBUG("Sending event");
     m_dataclient->SendPacket(ser);
-    //EUDAQ_DEBUG("Sent event");
+    EUDAQ_DEBUG("Sent event");
   }
 
 
