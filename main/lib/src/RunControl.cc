@@ -256,7 +256,7 @@ namespace eudaq {
         }
 
         m_producerbusy = busy;
-        }
+        
         if (from_string(status->GetTag("RUN"), m_runnumber) == m_runnumber) {
           // We ignore status messages that are marked with a previous run number
           OnReceive(ev.id, status);
