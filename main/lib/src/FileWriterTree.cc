@@ -70,19 +70,23 @@ namespace eudaq {
     unsigned int EVENT_LENGTH, FRAME_LENGTH,  DS/*Data specifier*/, ds;
     uint64_t EVENT_NUM, evn;
 
-    uint64_t EvTS;                  //EventTimestamp
-    uint64_t TrTS;                  //TriggerTimestamp
-    uint64_t TrCnt;             //TriggerCounter
-    unsigned int TluCnt;            //TLU Counter
-    unsigned short SI;                //StatusInfo
-  };
+    uint64_t EvTS;                  // EventTimestamp
+    uint64_t TrTS;                  // TriggerTimestamp
+    uint64_t TrTSdelta;             // TriggerTimestamp
+    uint64_t TrTSspill;             // TriggerTimestamp
+    uint64_t TrCnt;                 // TriggerCounter
+    unsigned int TluCnt;            // TLU Counter
+    unsigned short SI;              // StatusInfo
+    uint64_t sec ;
+    uint64_t firstTrTS ;
+ };
 
   namespace {
     static RegisterFileWriter<FileWriterTree> reg("tree");
   }
 
   FileWriterTree::FileWriterTree(const std::string & /*param*/)
-    : m_tfile(0), m_ttree(0),m_noe(0),chan(4),n_pixels(90*90+60*60)
+    : m_tfile(0), m_ttree(0),m_noe(0),chan(4),n_pixels(90*90+60*60), sec(48000000*8),firstTrTS(1)
   {
   }
 
@@ -102,6 +106,8 @@ namespace eudaq {
     m_ttree->Branch("event_counter", &EVENT_NUM, "event_counter/l");
     m_ttree->Branch("event_timestamp", &EvTS, "event_timestamp/l");
     m_ttree->Branch("trigger_timestamp", &TrTS, "trigger_timestamp/l");
+    m_ttree->Branch("trigger_timestamp_delta", &TrTSdelta, "trigger_timestamp_delta/l");
+    m_ttree->Branch("trigger_timestamp_spill", &TrTSspill, "trigger_timestamp_spill/l");
     m_ttree->Branch("trigger_counter", &TrCnt, "trigger_counter/i");
     m_ttree->Branch("status", &SI, "status/s");
   }
@@ -114,12 +120,34 @@ namespace eudaq {
     }
     bool bad=false;
 
+//    ev.Print(std::cout);
     for (unsigned int iEvent = 0; iEvent < ev.NumEvents(); ++iEvent) {
-      const RawDataEvent * rev = dynamic_cast<const RawDataEvent *>(ev.GetEvent(iEvent));
+
+      const eudaq::TLUEvent * tluEv = dynamic_cast<const eudaq::TLUEvent *>( ev.GetEvent(iEvent));
+//      cout << " event : " << iEvent << " tluEvent:" << tluEv <<  endl;
+      if( tluEv == 0 ) continue;
+//      tluEv->Print(std::cout);
+//      EvTS ;                  //EventTimestamp
+//      runnumber =  tluEv->GetRunNumber() ;
+      EVENT_NUM =  tluEv->GetEventNumber() ;
+      TrTSdelta =  tluEv->GetTimestamp() - TrTS;
+      TrTS      =  tluEv->GetTimestamp() ;
+      if( (TrTSdelta + 0.0)/((sec+0.0)) > 1.   || firstTrTS == 1 ) firstTrTS = TrTS;
+      TrTSspill     =  TrTS - firstTrTS;
+//      std::cout << TrTS  << " " << TrTSdelta << " " << TrTS << " " << firstTrTS  << std::endl;
+      m_ttree->Fill();
+    }
+ 
+    for (unsigned int iEvent = 0; iEvent < ev.NumEvents(); ++iEvent) {
+
+      const eudaq::RawDataEvent * rev = dynamic_cast<const eudaq::RawDataEvent *>( ev.GetEvent(iEvent));
+ //      const RawDataEvent * rev = dynamic_cast<const RawDataEvent *>(ev.GetEvent(iEvent));
+ //     cout << " event : " << iEvent << " rawEvent:" << rev <<  endl;
       if(rev == 0x0) continue; // check whether the event is 'healthy'
+      rev->Print(std::cout);  
       if(rev->GetSubType().compare("EXPLORER1Raw")!= 0) continue;
 
-      //cout << "[Number of blocks] " << rev->NumBlocks() << endl;            //just for checks
+      cout << "[Number of blocks] " << rev->NumBlocks() << endl;            //just for checks
       if(rev->NumBlocks()!=2) return;
 
       vector<unsigned char> data = rev->GetBlock(1);

@@ -11,7 +11,7 @@
 # include "TString.h"
 
 namespace eudaq {
-
+ 
   class FileWriterRoot : public FileWriter {
     public:
       FileWriterRoot(const std::string &);
@@ -75,32 +75,42 @@ namespace eudaq {
     
     }
     StandardEvent sev = eudaq::PluginManager::ConvertToStandard(ev);
-    for (size_t iplane = 0; iplane < sev.NumPlanes(); ++iplane) {
 
-      const eudaq::StandardPlane & plane = sev.GetPlane(iplane);
-      std::vector<double> cds = plane.GetPixels<double>();
-	  
-	 
+    if( sev.NumPlanes() > 0 ) {  
+      for (size_t iplane = 0; iplane < sev.NumPlanes(); ++iplane) {
 
-      for (size_t ipix = 0; ipix < cds.size(); ++ipix) {
+        const eudaq::StandardPlane & plane = sev.GetPlane(iplane);
+        std::vector<double> cds = plane.GetPixels<double>();
 
+        for (size_t ipix = 0; ipix < cds.size(); ++ipix) {
 
-
-        id_plane = plane.ID();          
-        id_hit = ipix;
-        id_x = plane.GetX(ipix);
-        id_y = plane.GetY(ipix);
-        i_time_stamp =  sev.GetTimestamp();
+          id_plane = plane.ID();          
+          id_hit = ipix;
+          id_x = plane.GetX(ipix);
+          id_y = plane.GetY(ipix);
+          i_time_stamp =  sev.GetTimestamp();
 		try{ 
 		i_tlu= std::stoull(sev.GetTag("TLU_trigger","15"));
 		}catch(...){
 			std::cout<<" error during converting "<<sev.GetTag("TLU_trigger","15") << " to ull"<<std::endl;
 		}
 
-        i_run = sev.GetRunNumber();
-        i_event = sev.GetEventNumber();                  
-        m_ttree->Fill(); 
-      }               
+          i_run = sev.GetRunNumber();
+          i_event = sev.GetEventNumber();                  
+          m_ttree->Fill(); 
+        }               
+      }
+    } else { 
+          i_time_stamp =  sev.GetTimestamp();
+		try{ 
+		i_tlu= std::stoull(sev.GetTag("TLU_trigger","15"));
+		}catch(...){
+			std::cout<<" error during converting "<<sev.GetTag("TLU_trigger","15") << " to ull"<<std::endl;
+		}
+
+          i_run = sev.GetRunNumber();
+          i_event = sev.GetEventNumber();                  
+          m_ttree->Fill();  
     }
   }
 
