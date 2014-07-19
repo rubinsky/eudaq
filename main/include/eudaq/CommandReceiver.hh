@@ -40,6 +40,7 @@ namespace eudaq {
       void Process(int timeout);
       void CommandThread();
       void StartThread();
+      const std::string& get_name(){ return m_name; }
     protected:
       Status m_status;
       TransportClient * m_cmdclient;
@@ -47,7 +48,7 @@ namespace eudaq {
       bool m_done;
       std::string m_type, m_name;
       void CommandHandler(TransportEvent &);
-      std::unique_ptr<std::thread> m_thread;
+	  std::unique_ptr<std::thread> m_thread;
       bool m_threadcreated;
   };
 

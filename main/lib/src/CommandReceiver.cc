@@ -109,6 +109,7 @@ namespace eudaq {
   void CommandReceiver::CommandHandler(TransportEvent & ev) {
     if (ev.etype == TransportEvent::RECEIVE) {
       std::string cmd = ev.packet, param;
+      std::cout << "void CommandReceiver::CommandHandler(TransportEvent & ev) cmd: " << cmd << std::endl;
       size_t i = cmd.find('\0');
       if (i != std::string::npos) {
         param = std::string(cmd, i+1);

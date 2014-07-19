@@ -15,17 +15,17 @@ namespace eudaq {
   namespace {
 
     class PseudoMutex {
-      public:
-        typedef bool type;
-        PseudoMutex(type & flag) : m_flag(flag) {
-          while (m_flag) {
-            mSleep(10);
-          };
-          m_flag = true;
-        }
-        ~PseudoMutex() { m_flag = false; }
-      private:
-        type & m_flag;
+    public:
+      typedef bool type;
+      PseudoMutex(type & flag) : m_flag(flag) {
+        while (m_flag) {
+          mSleep(10);
+        };
+        m_flag = true;
+      }
+      ~PseudoMutex() { m_flag = false; }
+    private:
+      type & m_flag;
     };
 
     void * RunControl_thread(void * arg) {
@@ -57,7 +57,7 @@ namespace eudaq {
     m_done = false;
     m_cmdserver = TransportFactory::CreateServer(listenaddress);
     m_cmdserver->SetCallback(TransportCallback(this, &RunControl::CommandHandler));
-	m_thread=std::unique_ptr<std::thread>(new std::thread(RunControl_thread, this));
+    m_thread = std::unique_ptr<std::thread>(new std::thread(RunControl_thread, this));
     //pthread_attr_init(&m_threadattr);
     //pthread_create(&m_thread, &m_threadattr, RunControl_thread, this);
     std::cout << "DEBUG: listenaddress=" << m_cmdserver->ConnectionString() << std::endl;
@@ -66,7 +66,7 @@ namespace eudaq {
   void RunControl::StopServer() {
     m_done = true;
     ///*if (m_thread)*/ pthread_join(m_thread, 0);
-	m_thread->join();
+    m_thread->join();
     delete m_cmdserver;
   }
 
@@ -75,12 +75,15 @@ namespace eudaq {
   }
 
   void RunControl::Configure(const Configuration & config) {
+    sendDatacollectorToProducer();
+    mSleep(500);
     SendCommand("CLEAR");
     mSleep(500);
     SendCommand("CONFIG", to_string(config));
     if (config.SetSection("RunControl")) {
       m_runsizelimit = config.Get("RunSizeLimit", 0LL);
-    } else {
+    }
+    else {
       m_runsizelimit = 0;
     }
   }
@@ -95,7 +98,8 @@ namespace eudaq {
       config.Set("Name", param);
       if (geoid) config.Set("GeoID", to_string(geoid));
       Configure(config);
-    } else {
+    }
+    else {
       EUDAQ_ERROR("Unable to open file '" + filename + "'");
     }
   }
@@ -119,8 +123,8 @@ namespace eudaq {
     SendCommand("CLEAR");
     mSleep(500);
     // give the data collectors time to prepare
-    for (std::map<size_t,std::string>::iterator it=m_dataaddr.begin(); it!=m_dataaddr.end(); ++it){
-	SendReceiveCommand("PREPARE", to_string(m_runnumber), GetConnection(it->first));
+    for (auto& e:m_dataCollecotrs){
+      SendReceiveCommand("PREPARE", to_string(m_runnumber), GetConnection(e.m_conection_adress));
     }
     mSleep(1000);
     SendCommand("START", to_string(m_runnumber));
@@ -177,86 +181,91 @@ namespace eudaq {
     EUDAQ_INFO("CommandHandler , type: " + ev.packet );
     //std::cout << "Event: ";
     switch (ev.etype) {
-      case (TransportEvent::CONNECT):
-        std::cout << "Connect:    " << ev.id << std::endl;
-        if (m_listening) {
-          m_cmdserver->SendPacket("OK EUDAQ CMD RunControl", ev.id, true);
-        } else {
-          m_cmdserver->SendPacket("ERROR EUDAQ CMD Not accepting new connections", ev.id, true);
-          m_cmdserver->Close(ev.id);
+    case (TransportEvent::CONNECT) :
+      std::cout << "Connect:    " << ev.id << std::endl;
+      if (m_listening) {
+        m_cmdserver->SendPacket("OK EUDAQ CMD RunControl", ev.id, true);
+      }
+      else {
+        m_cmdserver->SendPacket("ERROR EUDAQ CMD Not accepting new connections", ev.id, true);
+        m_cmdserver->Close(ev.id);
+      }
+      break;
+    case (TransportEvent::DISCONNECT) :
+      //std::cout << "Disconnection: " << ev.id << std::endl;
+      OnDisconnect(ev.id);
+      if (m_idata != (size_t)-1 && ev.id.Matches(GetConnection(m_idata))) m_idata = (size_t)-1;
+      if (m_ilog != (size_t)-1 && ev.id.Matches(GetConnection(m_ilog)))  m_ilog = (size_t)-1;
+      break;
+    case (TransportEvent::RECEIVE) :
+      //std::cout << "Receive: " << ev.packet << std::endl;
+      if (ev.id.GetState() == 0) { // waiting for identification
+      // check packet
+      do {
+        size_t i0 = 0, i1 = ev.packet.find(' ');
+        if (i1 == std::string::npos) break;
+        std::string part(ev.packet, i0, i1);
+        if (part != "OK") break;
+        i0 = i1 + 1;
+        i1 = ev.packet.find(' ', i0);
+        if (i1 == std::string::npos) break;
+        part = std::string(ev.packet, i0, i1 - i0);
+        if (part != "EUDAQ") break;
+        i0 = i1 + 1;
+        i1 = ev.packet.find(' ', i0);
+        if (i1 == std::string::npos) break;
+        part = std::string(ev.packet, i0, i1 - i0);
+        if (part != "CMD") break;
+        i0 = i1 + 1;
+        i1 = ev.packet.find(' ', i0);
+        part = std::string(ev.packet, i0, i1 - i0);
+        ev.id.SetType(part);
+        i0 = i1 + 1;
+        i1 = ev.packet.find(' ', i0);
+        part = std::string(ev.packet, i0, i1 - i0);
+        ev.id.SetName(part);
+      } while (false);
+      //std::cout << "client replied, sending OK" << std::endl;
+      m_cmdserver->SendPacket("OK", ev.id, true);
+      ev.id.SetState(1); // successfully identified
+      if (ev.id.GetType() == "LogCollector") {
+        InitLog(ev.id);
+      }
+      else if (ev.id.GetType() == "DataCollector") {
+        InitData(ev.id);
+      }
+      else {
+        InitOther(ev.id);
+      }
+      OnConnect(ev.id);
+      }
+      else {
+        BufferSerializer ser(ev.packet.begin(), ev.packet.end());
+        std::shared_ptr<Status> status(new Status(ser));
+        if (status->GetLevel() == Status::LVL_BUSY && ev.id.GetState() == 1) {
+          ev.id.SetState(2);
+        } else if (status->GetLevel() != Status::LVL_BUSY && ev.id.GetState() == 2) {
+          ev.id.SetState(1);
         }
-        break;
-      case (TransportEvent::DISCONNECT):
-        //std::cout << "Disconnection: " << ev.id << std::endl;
-        OnDisconnect(ev.id);
-        if (m_idata != (size_t)-1 && ev.id.Matches(GetConnection(m_idata))) m_idata = (size_t)-1;
-        if (m_ilog  != (size_t)-1 && ev.id.Matches(GetConnection(m_ilog)))  m_ilog  = (size_t)-1;
-        break;
-      case (TransportEvent::RECEIVE):
-        EUDAQ_INFO("CommandHandler , type::RECEIVE - " + ev.packet );
-        //std::cout << "Receive: " << ev.packet << std::endl;
-        if (ev.id.GetState() == 0) { // waiting for identification
-          // check packet
-          do {
-            size_t i0 = 0, i1 = ev.packet.find(' ');
-            if (i1 == std::string::npos) break;
-            std::string part(ev.packet, i0, i1);
-            if (part != "OK") break;
-            i0 = i1+1;
-            i1 = ev.packet.find(' ', i0);
-            if (i1 == std::string::npos) break;
-            part = std::string(ev.packet, i0, i1-i0);
-            if (part != "EUDAQ") break;
-            i0 = i1+1;
-            i1 = ev.packet.find(' ', i0);
-            if (i1 == std::string::npos) break;
-            part = std::string(ev.packet, i0, i1-i0);
-            if (part != "CMD") break;
-            i0 = i1+1;
-            i1 = ev.packet.find(' ', i0);
-            part = std::string(ev.packet, i0, i1-i0);
-            ev.id.SetType(part);
-            i0 = i1+1;
-            i1 = ev.packet.find(' ', i0);
-            part = std::string(ev.packet, i0, i1-i0);
-            ev.id.SetName(part);
-          } while(false);
-          //std::cout << "client replied, sending OK" << std::endl;
-          m_cmdserver->SendPacket("OK", ev.id, true);
-          ev.id.SetState(1); // successfully identified
-          if (ev.id.GetType() == "LogCollector") {
-            InitLog(ev.id);
-          } else if (ev.id.GetType() == "DataCollector") {
-            InitData(ev.id);
-          } else {
-            InitOther(ev.id);
+        bool busy = false;
+        for (size_t i = 0; i < m_cmdserver->NumConnections(); ++i) {
+          if (m_cmdserver->GetConnection(i).GetState() == 2) {
+            busy = true;
+            break;
           }
-          OnConnect(ev.id);
-        } else {
-          BufferSerializer ser(ev.packet.begin(), ev.packet.end());
-          std::shared_ptr<Status> status(new Status(ser));
-          if (status->GetLevel() == Status::LVL_BUSY && ev.id.GetState() == 1) {
-            ev.id.SetState(2);
-          } else if (status->GetLevel() != Status::LVL_BUSY && ev.id.GetState() == 2) {
-            ev.id.SetState(1);
-          }
-          bool busy = false;
-          for (size_t i = 0; i < m_cmdserver->NumConnections(); ++i) {
-            if (m_cmdserver->GetConnection(i).GetState() == 2) {
-              busy = true;
-              break;
-            }
-          }
-          m_producerbusy = busy;
-          if (from_string(status->GetTag("RUN"), m_runnumber) == m_runnumber) {
-            // We ignore status messages that are marked with a previous run number
-            OnReceive(ev.id, status);
-          }
-          //std::cout << "Receive:    " << ev.id << " \'" << ev.packet << "\'" << std::endl;
         }
-        break;
-      default:
-        std::cout << "Unknown:    " << ev.id << std::endl;
+
+        m_producerbusy = busy;
+        }
+        if (from_string(status->GetTag("RUN"), m_runnumber) == m_runnumber) {
+          // We ignore status messages that are marked with a previous run number
+          OnReceive(ev.id, status);
+        }
+        //std::cout << "Receive:    " << ev.id << " \'" << ev.packet << "\'" << std::endl;
+      }
+      break;
+    default:
+      std::cout << "Unknown:    " << ev.id << std::endl;
     }
   }
 
@@ -264,10 +273,11 @@ namespace eudaq {
     // default DC already connected?
     if (m_idata != (size_t)-1) {
       if (id.GetName() == ""){
-	EUDAQ_WARN("Default DataCollector already connected but additional (unamed) DataCollector found");
-	std::cout << "Default DataCollector already connected but additional (unamed) DataCollector found" << std::endl;
-      } else {
-	EUDAQ_INFO("Additional DataCollector connecting: "+id.GetName());
+        EUDAQ_WARN("Default DataCollector already connected but additional (unamed) DataCollector found");
+        std::cout << "Default DataCollector already connected but additional (unamed) DataCollector found" << std::endl;
+      }
+      else {
+        EUDAQ_INFO("Additional DataCollector connecting: " + id.GetName());
       }
     }
 
@@ -278,7 +288,8 @@ namespace eudaq {
     if (id.GetName() == "" || m_idata == (size_t)-1){
       isDefaultDC = true;
       std::cout << "New default DataCollector with name '" << id.GetName() << "' is connecting" << std::endl;
-    } else {
+    }
+    else {
       std::cout << "Additional DataCollector with name '" << id.GetName() << "' is connecting" << std::endl;
     }
 
@@ -291,35 +302,37 @@ namespace eudaq {
     unsigned thisRunNumber = from_string(part, 0);
     std::cout << "DataServer responded: RunNumber = " << thisRunNumber << std::endl;
 
-    if (m_runnumber >=0){
+    if (m_runnumber >= 0){
       // we have set the run number value before
       if (m_runnumber != static_cast<int32_t>(thisRunNumber)){
-	EUDAQ_THROW("DataCollector run number mismatch! Previously received run number does not match run number reported by newly connected DataCollector "+id.GetName());
+        EUDAQ_THROW("DataCollector run number mismatch! Previously received run number does not match run number reported by newly connected DataCollector " + id.GetName());
       }
-    } else {
+    }
+    else {
       // set the run number value to the one reported by the data collector
       m_runnumber = thisRunNumber;
     }
 
     // search all connections for this particular DC (and remember other DCs found)
     std::vector<std::string> otherDC; // holds names of other DCs found (important for announcing this DC)
-    size_t thisDCIndex = (size_t) -1;
+    size_t thisDCIndex = (size_t)-1;
     for (size_t i = 0; i < NumConnections(); ++i) {
       if (GetConnection(i).GetType() == "DataCollector") {
-	if (GetConnection(i).GetName() == id.GetName()){
-	  // found this DC
-	  if (thisDCIndex != (size_t) -1){
-	    EUDAQ_WARN("Multiple DataCollectors with the same name are connected!");
-	  }
-	  thisDCIndex = i;
-	}else{
-	  // found other DC -- important when announcing DC later
-	  otherDC.push_back(GetConnection(i).GetName());
-	}
+        if (GetConnection(i).GetName() == id.GetName()){
+          // found this DC
+          if (thisDCIndex != (size_t)-1){
+            EUDAQ_WARN("Multiple DataCollectors with the same name are connected!");
+          }
+          thisDCIndex = i;
+        }
+        else{
+          // found other DC -- important when announcing DC later
+          otherDC.push_back(GetConnection(i).GetName());
+        }
       }
     }
     if (thisDCIndex == (size_t)-1) EUDAQ_THROW("DataCollector connection problem");
-  
+
     // no name indicates default DC -- init global var
     if (isDefaultDC) m_idata = thisDCIndex;
 
@@ -341,45 +354,42 @@ namespace eudaq {
     // strip off the protocol and IP
     pos = dsAddrReported.find("://");
     if (pos != std::string::npos)
-      pos = dsAddrReported.find(":",pos+3);
+      pos = dsAddrReported.find(":", pos + 3);
     else
       pos = dsAddrReported.find(":");
     if (pos != std::string::npos) {
-      dataport = std::string(dsAddrReported, pos+1);
+      dataport = std::string(dsAddrReported, pos + 1);
     }
 
     // combine IP from connection with port number reported by data server
     std::string thisDataAddr = dataip;  thisDataAddr += ":"; thisDataAddr += dataport;
     std::cout << "DataServer responded: full server address determined to be  = '" << thisDataAddr << "'" << std::endl;
 
+
+    bool defaultDC = (id.GetName() == "");
+    m_dataCollecotrs.emplace_back(thisDataAddr, id.GetName(), thisDCIndex,defaultDC);
+
+    int i = 0;
+    for (auto & e : m_dataCollecotrs){
+
+      i += e.isDefault();
+    }
+
+    if (i > 1){
+      EUDAQ_ERROR("more than one default DC connected!");
+    }
+
+    /*
     std::pair<std::map<size_t,std::string>::iterator,bool> ret;
     ret = m_dataaddr.insert ( std::pair<size_t, std::string>(thisDCIndex,thisDataAddr) );
     if (ret.second==false) {
-      std::cout << "Connection with DataCollector number " << thisDCIndex << " already existed" << std::endl;
-      std::cout << " with a remote address of " << ret.first->second << std::endl;
+    std::cout << "Connection with DataCollector number " << thisDCIndex << " already existed" << std::endl;
+    std::cout << " with a remote address of " << ret.first->second << std::endl;
     }
+    */
 
-    for (size_t i = 0; i < NumConnections(); ++i) {
-      if (isDefaultDC){
-	// check that we do not override a previously connected DC
-	bool matches = false;
-	for (std::vector<std::string>::iterator it = otherDC.begin() ; it != otherDC.end(); ++it){
-	  if (GetConnection(i).GetName() == *it){
-	    matches = true;
-	  }
-	}
-	if (!matches){
-	  // announce default DC to any connected command receiver not
-	  // named the same as previously found DCs
-	  SendCommand("DATA", thisDataAddr,GetConnection(i));
-	}
-      } else {
-	if (GetConnection(i).GetName() == id.GetName()) {
-	  // announce named DC to specific producer
-	  SendCommand("DATA", thisDataAddr,GetConnection(i));
-	}
-      }
-    }
+
+
     // announce log collector to DC
     if (m_ilog != (size_t)-1) {
       SendCommand("LOG", m_logaddr, id);
@@ -404,9 +414,10 @@ namespace eudaq {
     SendCommand("LOG", m_logaddr);
 
     // loop over data collectors and announce LC
-    for (std::map<size_t,std::string>::iterator it=m_dataaddr.begin(); it!=m_dataaddr.end(); ++it){
-      SendCommand("DATA", it->second, id);
+    for (auto& e : m_dataCollecotrs){
+      SendCommand("DATA", e.m_dataaddr, id);
     }
+
   }
 
   void RunControl::InitOther(const ConnectionInfo & id) {
@@ -415,19 +426,81 @@ namespace eudaq {
     if (m_ilog != (size_t)-1) {
       SendCommand("LOG", m_logaddr, id);
     }
-
+    /*
     // search for applicable DC
     bool foundDC = false;
-    for (std::map<size_t,std::string>::iterator it=m_dataaddr.begin(); it!=m_dataaddr.end(); ++it){
-      if (GetConnection(it->first).GetName() == id.GetName()){
-	foundDC= true;
-	SendCommand("DATA", it->second, id);
+
+    for (auto& e : m_dataCollecotrs){
+      if (e.m_name == id.GetName()){
+        foundDC == true;
+        SendCommand("DATA", e.m_dataaddr, id);
       }
+
     }
     // if not found, use default DC
     if (!foundDC && m_idata != (size_t)-1) {
-      SendCommand("DATA", m_dataaddr[m_idata], id);
+      for (auto& e : m_dataCollecotrs){
+        if (e.isDefault()){
+          SendCommand("DATA", e.m_dataaddr, id);
+        }
+      }
+    
     }
+    */
+  }
+  void  RunControl::sendDatacollectorToProducer(){
+
+    auto defaultDC = std::find_if(m_dataCollecotrs.begin(), m_dataCollecotrs.end(), [](const dataCollecterContainerClass& dc){
+      return dc.isDefault();
+    });
+
+    for (size_t i = 0; i < NumConnections(); ++i) {
+      
+      if (ConnectionInfoHelpers::getDeviceType(GetConnection(i)) == ConnectionInfoHelpers::DeviceType::Producer){
+
+        std::string dcName = GetConnection(i).GetName();
+
+        auto ret=std::find_if(m_dataCollecotrs.begin(), m_dataCollecotrs.end(), [&dcName](const dataCollecterContainerClass& dc){
+          return dcName == dc.m_name;
+        });
+        if (ret != m_dataCollecotrs.end()){
+          SendCommand("DATA", ret->m_dataaddr, GetConnection(i));
+        }
+        else if(defaultDC!=m_dataCollecotrs.end()){
+          
+          SendCommand("DATA", defaultDC->m_dataaddr, GetConnection(i));
+        }
+        else{
+          std::string errorMessage = "DataCollector for specific producer is missing \"" + dcName + "\". No Default DC connected!!";
+          EUDAQ_ERROR(errorMessage);
+        }
+      }
+    }
+  }
+
+
+  namespace ConnectionInfoHelpers{
+    DeviceType getDeviceType(const ConnectionInfo& dev){
+      if (dev.GetType() == "LogCollector"){
+        return logCollector;
+      }
+      else if (dev.GetType() == "DataCollector"){
+        return DataCollector;
+
+      }
+  
+      return Producer;
+    }
+
+
+    bool isDefaultDataCollector(const ConnectionInfo& dev){
+
+      if (getDeviceType(dev) == DataCollector && dev.GetName()==""){
+        return true;
+      }
+      return false;
+    }
+
   }
 
 }
