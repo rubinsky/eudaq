@@ -153,7 +153,6 @@ namespace eudaq {
   }
 
   std::string RunControl::SendReceiveCommand(const std::string & cmd, const std::string & param,
-      const ConnectionInfo & id) {
     const ConnectionInfo & id) {
     PseudoMutex m(m_busy);
     mSleep(500); // make sure there are no pending replies
