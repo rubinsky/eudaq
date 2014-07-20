@@ -158,7 +158,7 @@ namespace eudaq {
         SendPacket(reinterpret_cast<const unsigned char *>(str), std::strlen(str), inf, duringconnect);
       }
       void SendPacket(const BufferSerializer & t, const ConnectionInfo & inf = ConnectionInfo::ALL, bool duringconnect = false) {
-        std::cout << "SendPacket (BufferSerializer)"  << std::endl;
+//        std::cout << "SendPacket (BufferSerializer)"  << std::endl;
         SendPacket(&t[0], t.size(), inf, duringconnect);
       }
 

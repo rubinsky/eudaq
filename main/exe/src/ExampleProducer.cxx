@@ -40,6 +40,14 @@ class ExampleProducer : public eudaq::Producer {
       int m_height =  config.Get("height",1152);
       std::cout << "Example Parameter height = " << m_height << std::endl;
       hardware.SetHeight( config.Get("height",576) );
+ 
+      int m_threshold =  config.Get("threshold",10);
+      std::cout << "Example Parameter threshold = " << m_threshold << std::endl;
+      hardware.SetThreshold( config.Get("height",576) );
+ 
+      int m_particles =  config.Get("particles",1);
+      std::cout << "Example Parameter particles = " << m_particles << std::endl;
+      hardware.SetThreshold( config.Get("particles",1) );
      
       // At the end, set the status that will be displayed in the Run Control.
       SetStatus(eudaq::Status::LVL_OK, "Configured (" + config.Name() + ")");

@@ -24,23 +24,34 @@ namespace eudaq {
       return result;
     }
 
-    std::vector<unsigned char> ZeroSuppressEvent(const std::vector <unsigned char> & data, unsigned width, int threshold = 10) {
-      unsigned height = data.size() / width / 2;
+    std::vector<unsigned char> ZeroSuppressEvent( unsigned width, unsigned height, unsigned threshold, unsigned particles ) {
+      std::default_random_engine generator_poison;
+      std::poisson_distribution<int> distribution_particles(particles);
+      short l_particles = distribution_particles( generator_poison );
+
+      std::default_random_engine generator_x;
+      std::normal_distribution<double> distribution_x( width/2., width/6.);
+
+      std::default_random_engine generator_y;
+      std::normal_distribution<double> distribution_y( height/2., height/6.);
+
+
       std::vector<unsigned char> result;
+ 
       size_t inoffset = 0, outoffset = 0;
-      for (unsigned y = 0; y < height; ++y) {
-        for (unsigned x = 0; x < width; ++x) {
-          short charge = getlittleendian<short>(&data[inoffset]);
-          if (charge > threshold) {
+      for( unsigned i_particle =0; i_particle< l_particles; i_particle ++ ) {
+        
+        double x = distribution_x( generator_x);
+        double y = distribution_y( generator_y); 
+        if( x < 0. || x > width || y < 0. || y > height ) continue;
+
             result.resize(outoffset+6);
-            setlittleendian<unsigned short>(&result[outoffset+0], x);
-            setlittleendian<unsigned short>(&result[outoffset+2], y);
-            setlittleendian<short>(&result[outoffset+4], charge);
-            outoffset += 6;
-          }
-          inoffset += 2;
-        }
+            setlittleendian<unsigned short>(&result[outoffset+0], static_cast<int> (x) );
+            setlittleendian<unsigned short>(&result[outoffset+2], static_cast<int> (y) );
+            setlittleendian<short>(&result[outoffset+4], 0);
+            outoffset += 6;       
       }
+
       return result;
     }
 
@@ -50,7 +61,9 @@ namespace eudaq {
     : m_numsensors(6),
     m_width(1152),
     m_height(576),
-    m_triggerid(0)
+    m_triggerid(0),
+    m_threshold(10),
+    m_particles(1)
   {}
 
   void ExampleHardware::Setup(int) {
@@ -82,7 +95,7 @@ namespace eudaq {
 //      result.insert(result.end(), data.begin(), data.end());
 //    } else {
       // Zero suppressed data
-      std::vector<unsigned char> data = ZeroSuppressEvent(MakeRawEvent(m_width, m_height), m_width);
+      std::vector<unsigned char> data = ZeroSuppressEvent( m_width, m_height, m_threshold, m_particles);
       result.insert(result.end(), data.begin(), data.end());
       unsigned short numhits = (result.size() - 8) / 6;
       setlittleendian<unsigned short>(&result[6], 0x8000 | numhits);
