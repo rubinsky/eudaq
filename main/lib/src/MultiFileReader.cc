@@ -24,22 +24,22 @@ bool eudaq::multiFileReader::NextEvent( size_t skip /*= 0*/ )
 	for (size_t skipIndex=0;skipIndex<=skip;skipIndex++)
 	{
 	
-	do{
+	  do{
 		for (size_t fileID = 0; fileID < m_fileReaders.size(); ++fileID)
 		{
-			if (!m_fileReaders[fileID]->NextEvent()&&m_sync.SubEventQueueIsEmpty(fileID))
+			if (!m_fileReaders[fileID]->NextEvent() && m_sync.SubEventQueueIsEmpty(fileID))
 			{
 				return false;
 			}
 			m_sync.AddDetectorElementToProducerQueue(fileID,m_fileReaders[fileID]->GetDetectorEvent_ptr());
 		}
 		m_sync.storeCurrentOrder();
-	}while (!m_sync.SyncNEvents(m_eventsToSync));
+	  }while (!m_sync.SyncNEvents(m_eventsToSync));
 	
-	if (!m_sync.getNextEvent(m_ev))
-	{
+	  if (!m_sync.getNextEvent(m_ev))
+  	  {
 		return false;
-	}
+	  }
 	
 	}	
 	return true;
@@ -47,7 +47,7 @@ bool eudaq::multiFileReader::NextEvent( size_t skip /*= 0*/ )
 
 const eudaq::DetectorEvent & eudaq::multiFileReader::GetDetectorEvent() const
 {
-	    return dynamic_cast<const eudaq::DetectorEvent &>(*m_ev);
+	return dynamic_cast<const eudaq::DetectorEvent &>(*m_ev);
 }
 
 const eudaq::Event & eudaq::multiFileReader::GetEvent() const
