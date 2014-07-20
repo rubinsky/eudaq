@@ -1,17 +1,22 @@
 #include "eudaq/ExampleHardware.hh"
 #include "eudaq/Utils.hh"
+#include <random>
 
 namespace eudaq {
 
   namespace {
 
-    std::vector<unsigned char> MakeRawEvent(unsigned width,
-        unsigned height) {
+    std::vector<unsigned char> MakeRawEvent(unsigned width, unsigned height) {
       std::vector<unsigned char> result(width*height*2);
       size_t offset = 0;
+
+      std::default_random_engine generator;
+      std::poisson_distribution<int> distribution(1.0);
+
       for (unsigned y = 0; y < height; ++y) {
         for (unsigned x = 0; x < width; ++x) {
-          short charge = 0;
+          short charge = distribution(generator);
+
           setlittleendian(&result[offset], charge);
           offset += 2;
         }
@@ -42,9 +47,9 @@ namespace eudaq {
   }
 
   ExampleHardware::ExampleHardware()
-    : m_numsensors(2),
-    m_width(256),
-    m_height(256),
+    : m_numsensors(6),
+    m_width(1152),
+    m_height(576),
     m_triggerid(0)
   {}
 
@@ -70,18 +75,18 @@ namespace eudaq {
     setlittleendian<unsigned short>(&result[0], m_width);
     setlittleendian<unsigned short>(&result[2], m_height);
     setlittleendian<unsigned short>(&result[4], m_triggerid);
-    if (sensorid % 2 == 0) {
-      // Raw Data
-      setlittleendian(&result[6], static_cast<unsigned short>(0));
-      std::vector<unsigned char> data = MakeRawEvent(m_width, m_height);
-      result.insert(result.end(), data.begin(), data.end());
-    } else {
+//    if (sensorid % 2 == 0) {
+//      // Raw Data
+//      setlittleendian(&result[6], static_cast<unsigned short>(0));
+//      std::vector<unsigned char> data = MakeRawEvent(m_width, m_height);
+//      result.insert(result.end(), data.begin(), data.end());
+//    } else {
       // Zero suppressed data
       std::vector<unsigned char> data = ZeroSuppressEvent(MakeRawEvent(m_width, m_height), m_width);
       result.insert(result.end(), data.begin(), data.end());
       unsigned short numhits = (result.size() - 8) / 6;
       setlittleendian<unsigned short>(&result[6], 0x8000 | numhits);
-    }
+//    }
     return result;
   }
 

@@ -36,6 +36,14 @@ namespace eudaq {
 
   } // anonymous namespace
 
+  bool isEqual(const dataCollecterContainerClass& dc, const std::string& name){
+    if (dc.m_name==name)
+    {
+      return true;
+    }
+    return false;
+  }
+
   RunControl::RunControl(const std::string & listenaddress)
     : m_done(false),
     m_listening(true),

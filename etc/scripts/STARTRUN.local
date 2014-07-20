@@ -59,19 +59,19 @@ printf '\033[22;33m\t TestDataCollector \033[0m \n'
 #echo xterm -sb -sl 1000 -geom 80x10-480-900 -fn fixed -T "Data Collector" -e "./TestDataCollector.exe -r tcp://$HOSTIP:$RCPORT" 
 #xterm -sb -sl 1000 -geom 80x10-480-900 -fn fixed -T "Data Collector" -e "./TestDataCollector.exe -r tcp://$HOSTIP:$RCPORT" &
 
-echo ./TestDataCollector.exe -n NAME1 -r tcp://$HOSTIP:$RCPORT -a tcp://$RCPORT1 
+# echo ./TestDataCollector.exe -n NAME1 -r tcp://$HOSTIP:$RCPORT -a tcp://$RCPORT1 
 
-xterm -e "cd bin;./TestDataCollector.exe -n NAME1 -r tcp://$HOSTIP:$RCPORT -a tcp://$RCPORT1" &
+xterm -e "cd bin;./TestDataCollector.exe -n MimosaNI -r tcp://$HOSTIP:$RCPORT -a tcp://$RCPORT1" &
 sleep 2
 
-#xterm -e "cd bin;./TestDataCollector.exe -n NAME2 -r tcp://$HOSTIP:$RCPORT -a tcp://$RCPORT2" &
-#sleep 2
-
-xterm -e "cd bin;./ExampleProducer.exe -r tcp://$HOSTIP:$RCPORT " &
+xterm -e "cd bin;./ExampleProducer.exe -n MimosaNI -r tcp://$HOSTIP:$RCPORT " &
 sleep 2
 
-xterm -e "cd bin;./TestDataCollector.exe -n NAME2 -r tcp://$HOSTIP:$RCPORT -a tcp://$RCPORT2" &
-#sleep 2
+xterm -e "cd bin;./TestDataCollector.exe -n FEI4 -r tcp://$HOSTIP:$RCPORT -a tcp://$RCPORT2" &
+sleep 2
+
+xterm -e "cd bin;./ExampleProducer.exe -n FEI4 -r tcp://$HOSTIP:$RCPORT " &
+sleep 2
 
 
 

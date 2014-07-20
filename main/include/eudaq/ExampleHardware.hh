@@ -14,7 +14,10 @@ namespace eudaq {
       bool EventsPending() const;
       unsigned NumSensors() const;
       std::vector<unsigned char> ReadSensor(int sensorid);
-      void CompletedEvent();
+      void CompletedEvent(); 
+      void SetHeight(unsigned short v) {m_height = v;}
+      void SetWidth(unsigned short u) {m_width = u;}
+
     private:
       unsigned short m_numsensors, m_width, m_height, m_triggerid;
       eudaq::Timer m_timer;

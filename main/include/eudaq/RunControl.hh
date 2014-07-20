@@ -45,14 +45,8 @@ namespace eudaq {
     bool m_isDefaultDC;
   };
 
-  bool isEqual(const dataCollecterContainerClass& dc, const std::string& name){
-    if (dc.m_name==name)
-    {
-      return true;
-    }
-    return false;
-  }
-
+  bool isEqual(const dataCollecterContainerClass& dc, const std::string& name);
+  
   class DLLEXPORT RunControl {
     public:
       explicit RunControl(const std::string & listenaddress = "");

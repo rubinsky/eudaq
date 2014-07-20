@@ -32,7 +32,15 @@ class ExampleProducer : public eudaq::Producer {
       m_exampleparam = config.Get("Parameter", 0);
       std::cout << "Example Parameter = " << m_exampleparam << std::endl;
       hardware.Setup(m_exampleparam);
-
+  
+      int m_width =  config.Get("width",1152);
+      std::cout << "Example Parameter width = " << m_width << std::endl;
+      hardware.SetWidth( config.Get("width",1152) );
+ 
+      int m_height =  config.Get("height",1152);
+      std::cout << "Example Parameter height = " << m_height << std::endl;
+      hardware.SetHeight( config.Get("height",576) );
+     
       // At the end, set the status that will be displayed in the Run Control.
       SetStatus(eudaq::Status::LVL_OK, "Configured (" + config.Name() + ")");
     }
