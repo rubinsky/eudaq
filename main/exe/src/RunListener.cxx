@@ -14,7 +14,7 @@ class RunListener : public eudaq::CommandReceiver {
       }
     void Run() {
       while (!done) {
-        eudaq::mSleep(100);
+        eudaq::mSleep(1);
       }
     }
   private:

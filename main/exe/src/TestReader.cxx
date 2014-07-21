@@ -31,7 +31,7 @@ bool DoEvent(unsigned /*ndata*/, const eudaq::DetectorEvent & dev, bool do_proce
     // do this if an event range is given
     if (do_display) {
 
-      std::cout << dev << std::endl;
+      std::cout << "do_display: " << dev << std::endl;
 
       if (do_dump) {
 
@@ -67,7 +67,7 @@ bool DoEvent(unsigned /*ndata*/, const eudaq::DetectorEvent & dev, bool do_proce
       unsigned boardnum = 0;
       const StandardEvent & sev = eudaq::PluginManager::ConvertToStandard(dev);
 
-      if (do_display) std::cout << "Standard Event: " << sev << std::endl;
+      if (do_display) std::cout << "Standard Event: \n " << sev << std::endl;
 
       for (size_t iplane = 0; iplane < sev.NumPlanes(); ++iplane) {
 
@@ -171,6 +171,7 @@ int main(int /*argc*/, char ** argv) {
             }
           } else if (const StandardEvent * sev = dynamic_cast<const StandardEvent *>(&ev)) {
             bool show = std::find(displaynumbers.begin(), displaynumbers.end(), ndata) != displaynumbers.end();
+            std::cout << " found " << sev->NumPlanes() << " planes " << std::endl; 
             if (show) {
               std::cout << *sev << std::endl;
               shown = true;

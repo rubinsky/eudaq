@@ -19,7 +19,7 @@ namespace eudaq {
       typedef bool type;
       PseudoMutex(type & flag) : m_flag(flag) {
         while (m_flag) {
-          mSleep(10);
+          mSleep(1);
         };
         m_flag = true;
       }
@@ -186,7 +186,7 @@ namespace eudaq {
 
   void RunControl::CommandHandler(TransportEvent & ev) {
    
-    EUDAQ_INFO("CommandHandler , type: " + ev.packet );
+    // EUDAQ_INFO("CommandHandler , type: " + ev.packet );
     //std::cout << "Event: ";
     switch (ev.etype) {
     case (TransportEvent::CONNECT) :

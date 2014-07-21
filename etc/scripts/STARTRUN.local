@@ -61,16 +61,16 @@ printf '\033[22;33m\t TestDataCollector \033[0m \n'
 
 # echo ./TestDataCollector.exe -n NAME1 -r tcp://$HOSTIP:$RCPORT -a tcp://$RCPORT1 
 
-xterm -e "cd bin;./TestDataCollector.exe -n MimosaNI -r tcp://$HOSTIP:$RCPORT -a tcp://$RCPORT1" &
+xterm -e "cd bin;./TestDataCollector.exe -n Example1 -r tcp://$HOSTIP:$RCPORT -a tcp://$RCPORT1" &
 sleep 2
 
-xterm -e "cd bin;./ExampleProducer.exe -n MimosaNI -r tcp://$HOSTIP:$RCPORT " &
+xterm -e "cd bin;./ExampleProducer.exe -n Example1 -r tcp://$HOSTIP:$RCPORT " &
 sleep 2
 
-xterm -e "cd bin;./TestDataCollector.exe -n FEI4 -r tcp://$HOSTIP:$RCPORT -a tcp://$RCPORT2" &
+xterm -e "cd bin;./TestDataCollector.exe -n Example2 -r tcp://$HOSTIP:$RCPORT -a tcp://$RCPORT2" &
 sleep 2
 
-xterm -e "cd bin;./ExampleProducer.exe -n FEI4 -r tcp://$HOSTIP:$RCPORT " &
+xterm -e "cd bin;./ExampleProducer.exe -n Example2 -r tcp://$HOSTIP:$RCPORT " &
 sleep 2
 
 

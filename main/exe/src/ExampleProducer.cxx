@@ -8,6 +8,7 @@
 #include <iostream>
 #include <ostream>
 #include <vector>
+#include <sstream>
 
 // A name to identify the raw data format of the events generated
 // Modify this to something appropriate for your producer.
@@ -21,7 +22,7 @@ class ExampleProducer : public eudaq::Producer {
     // and the runcontrol connection string, and initialize any member variables.
     ExampleProducer(const std::string & name, const std::string & runcontrol)
       : eudaq::Producer(name, runcontrol),
-      m_run(0), m_ev(0), stopping(false), done(false),started(0) {}
+      m_run(0), m_ev(0), m_detector(EVENT_TYPE), stopping(false), done(false),started(0) {}
 
     // This gets called whenever the DAQ is configured
     virtual void OnConfigure(const eudaq::Configuration & config) {
@@ -47,7 +48,11 @@ class ExampleProducer : public eudaq::Producer {
  
       int m_particles =  config.Get("particles",1);
       std::cout << "Example Parameter particles = " << m_particles << std::endl;
-      hardware.SetThreshold( config.Get("particles",1) );
+      hardware.SetParticles( config.Get("particles",1) );
+ 
+      m_detector =  config.Get("detector","NI");
+      std::cout << "Example Parameter detector = " << m_detector << std::endl;
+//      hardware.SetThreshold( config.Get("detector","NI") );
      
       // At the end, set the status that will be displayed in the Run Control.
       SetStatus(eudaq::Status::LVL_OK, "Configured (" + config.Name() + ")");
@@ -62,7 +67,7 @@ class ExampleProducer : public eudaq::Producer {
       std::cout << "Start Run: " << m_run << std::endl;
 
       // It must send a BORE to the Data Collector
-      eudaq::RawDataEvent bore(eudaq::RawDataEvent::BORE(EVENT_TYPE, m_run));
+      eudaq::RawDataEvent bore(eudaq::RawDataEvent::BORE( m_detector , m_run));
       // You can set tags on the BORE that will be saved in the data file
       // and can be used later to help decoding
       bore.SetTag("EXAMPLE", eudaq::to_string(m_exampleparam));
@@ -83,12 +88,12 @@ class ExampleProducer : public eudaq::Producer {
 
       // wait until all events have been read out from the hardware
       while (stopping) {
-        eudaq::mSleep(20);
+        eudaq::mSleep(1);
       }
 
       // Send an EORE after all the real events have been sent
       // You can also set tags on it (as with the BORE) if necessary
-      SendEvent(eudaq::RawDataEvent::EORE("Test", m_run, ++m_ev));
+      SendEvent( eudaq::RawDataEvent::EORE( m_detector, m_run, ++m_ev) );
     }
 
     // This gets called when the Run Control is terminating,
@@ -109,30 +114,29 @@ class ExampleProducer : public eudaq::Producer {
             stopping = false;
           }
           // Now sleep for a bit, to prevent chewing up all the CPU
-          eudaq::mSleep(20);
+          eudaq::mSleep(1);
           // Then restart the loop
           continue;
         }
 		if (!started)
 		{
 			// Now sleep for a bit, to prevent chewing up all the CPU
-			eudaq::mSleep(20);
+			eudaq::mSleep(1);
 			// Then restart the loop
 			continue;
 		}
         // If we get here, there must be data to read out
         // Create a RawDataEvent to contain the event data to be sent
-        eudaq::RawDataEvent ev(EVENT_TYPE, m_run, m_ev);
+        eudaq::RawDataEvent ev( m_detector, m_run, m_ev);
 
         for (unsigned plane = 0; plane < hardware.NumSensors(); ++plane) {
-          // Read out a block of raw data from the hardware
-          std::vector<unsigned char> buffer = hardware.ReadSensor(plane);
-          // Each data block has an ID that is used for ordering the planes later
-          // If there are multiple sensors, they should be numbered incrementally
-
-          // Add the block of raw data to the event
-          ev.AddBlock(plane, buffer);
+            // Read out a block of raw data from the hardware
+            std::vector<unsigned char> buffer =  hardware.ReadSensor(plane);
+            // Each data block has an ID that is used for ordering the planes later
+            //  If there are multiple sensors, they should be numbered incrementally
+            ev.AddBlock(plane, buffer);
         }
+
         hardware.CompletedEvent();
         // Send the event to the Data Collector      
         SendEvent(ev);
@@ -148,6 +152,7 @@ class ExampleProducer : public eudaq::Producer {
     eudaq::ExampleHardware hardware;
     unsigned m_run, m_ev, m_exampleparam;
     bool stopping, done,started;
+    std::string m_detector;
 };
 
 // The main function that will create a Producer instance and run it

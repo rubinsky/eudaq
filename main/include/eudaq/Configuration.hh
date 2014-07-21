@@ -14,28 +14,38 @@ namespace eudaq {
       Configuration(const std::string & config = "", const std::string & section = "");
       Configuration(std::istream & conffile, const std::string & section = "");
       Configuration(const Configuration & other);
+
       void Save(std::ostream & file) const;
       void Load(std::istream & file, const std::string & section);
+
       bool SetSection(const std::string & section) const;
       bool SetSection(const std::string & section);
+
       std::string operator [] (const std::string & key) const { return GetString(key); }
+
       std::string Get(const std::string & key, const std::string & def) const;
+
       double Get(const std::string & key, double def) const;
+
       int64_t Get(const std::string & key, int64_t def) const;
 	  uint64_t Get(const std::string & key,uint64_t def) const;
 	  template <typename T>
 	  T Get(const std::string &key, T def) const {
 		  return eudaq::from_string(Get(key,to_string(def)),  def);
 	  }
+
       int Get(const std::string & key, int def) const;
+
       template <typename T>
         T Get(const std::string & key, const std::string fallback, const T & def) const {
           return Get(key, Get(fallback, def));
         }
-		std::string Get(const std::string & key, const char * def) const{
-			std::string ret(Get(key,std::string(def)));
-			return ret;
-		}
+
+      std::string Get(const std::string & key, const char * def) const{
+        std::string ret(Get(key,std::string(def)));
+	return ret;
+      }
+
       std::string Get(const std::string & key, const std::string fallback, std::string def) const {
         return Get(key, Get(fallback, def));
       }
