@@ -14,8 +14,8 @@ pybindgen.settings.error_handler = ErrorHandler()
 import sys
 
 def module_init():
-    root_module = Module('libPyIndexReader', cpp_namespace='::')
-    root_module.add_include('"eudaq/IndexReader.hh"')
+    root_module = Module('libPyPyPacket', cpp_namespace='::')
+    root_module.add_include('"eudaq/PyPacket.hh"')
     return root_module
 
 def register_types(module):
@@ -37,36 +37,39 @@ def register_types(module):
 def register_types_eudaq(module):
     root_module = module.get_root()
     
-    module.add_class('IndexReader')
+    module.add_class('PyPacket')
 
 def register_types_std(module):
     root_module = module.get_root()
     
 
 def register_methods(root_module):
-    register_EudaqIndexReader_methods(root_module, root_module['eudaq::IndexReader'])
+    register_EudaqPyPacket_methods(root_module, root_module['eudaq::PyPacket'])
     return
 
-def register_EudaqIndexReader_methods(root_module, cls):
-    cls.add_constructor([param('eudaq::IndexReader const &', 'arg0')])
-    cls.add_constructor([param('std::string const &', 'filename')])
-    cls.add_method('Filename', 
-                   'std::string', 
+def register_EudaqPyPacket_methods(root_module, cls):
+    cls.add_constructor([param('eudaq::PyPacket const &', 'arg0')])
+    cls.add_constructor([param('std::string const &', 'type'), param('std::string const &', 'subType')])
+    cls.add_method('addMetaData', 
+                   'void', 
+                   [param('bool', 'tlu'), param('int', 'type'), param('uint64_t', 'data')])
+    cls.add_method('getNextToSend', 
+                   'eudaq::PyPacket *', 
                    [], 
-                   is_const=True)
-    cls.add_method('RunNumber', 
-                   'long long unsigned int', 
-                   [], 
-                   is_const=True)
-    cls.add_method('data2json', 
-                   'std::string', 
+                   is_static=True)
+    cls.add_method('nextToSend', 
+                   'void', 
                    [])
-    cls.add_method('getJsonConfig', 
-                   'std::string', 
-                   [])
-    cls.add_method('readNext', 
-                   'bool', 
-                   [])
+    cls.add_method('setData', 
+                   'void', 
+                   [param('uint64_t *', 'data'), param('uint64_t', 'size')])
+    cls.add_method('setDataSize', 
+                   'void', 
+                   [param('uint64_t', 'size')])
+    cls.add_method('setTags', 
+                   'void', 
+                   [param('std::string const &', 'jsonString')])
+    cls.add_instance_attribute('packet', 'eudaq::AidaPacket *', is_const=False)
     return
 
 def register_functions(root_module):

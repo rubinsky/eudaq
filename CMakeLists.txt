@@ -5,10 +5,10 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.6 FATAL_ERROR)
 PROJECT( EUDAQ )
 
 # project version
-SET( ${PROJECT_NAME}_VERSION_MAJOR 1 )
-SET( ${PROJECT_NAME}_VERSION_MINOR 4 )
-SET( ${PROJECT_NAME}_VERSION_PATCH 3 )
-
+SET( ${PROJECT_NAME}_VERSION_MAJOR 2 )
+SET( ${PROJECT_NAME}_VERSION_MINOR 0 )
+SET( ${PROJECT_NAME}_VERSION_PATCH 0 )
+ 
 LIST ( APPEND CMAKE_CXX_FLAGS "-fPIC -O2" )
 LIST ( APPEND CMAKE_LD_FLAGS "-fPIC -O2" )
 
@@ -142,6 +142,12 @@ IF(BUILD_python)
   add_subdirectory(main/python)
 ENDIF()
 
+# build EUDAQ pybindgen bindings
+option(BUILD_pybindgen "Compile pybindgen binding libraries?" OFF)
+IF(BUILD_pybindgen)
+  add_subdirectory(etc/pybindgen)
+ENDIF()
+
 # build native reader used for data conversion into LCIO
 IF(BUILD_nreader)
   add_subdirectory(nreader)
@@ -159,6 +165,11 @@ IF(BUILD_onlinemon)
   add_subdirectory(monitors/onlinemon)
 ENDIF()
 
+# build resender Producer
+option(BUILD_resender "Compile resender Producer?" OFF)
+IF(BUILD_resender)
+  add_subdirectory(reSendProducer)
+ENDIF()
 
 # build Offline Monitor
 option(BUILD_offlinemon "Compile Offline Monitor executable (requires ROOT)?" OFF)
@@ -166,6 +177,17 @@ IF(BUILD_offlinemon)
   add_subdirectory(monitors/offlinemon)
 ENDIF()
 
+# build Metadata Monitor
+option(BUILD_metamon "Compile MetaData Monitor executable" OFF)
+IF(BUILD_metamon)
+  add_subdirectory(monitors/metamon)
+ENDIF()
+
+# build Sync Test
+option(BUILD_SyncTest "Compile Sync test" OFF)
+IF(BUILD_SyncTest)
+  add_subdirectory(syncTest)
+ENDIF()
 
 
 ###############################################
