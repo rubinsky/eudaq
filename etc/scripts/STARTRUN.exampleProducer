@@ -64,7 +64,7 @@ sleep 2
 # DataCollector
 ###############
 printf '\033[22;33m\t TestDataCollector \033[0m \n'
-#xterm -sb -sl 1000 -geom 80x10-480-900 -fn fixed -T "Data Collector2" -e "./TestDataCollector.exe -n DC2 -r tcp://$HOSTIP:$RCPORT -a 49002" &
+xterm -sb -sl 1000 -geom 80x10-480-900 -fn fixed -T "Data Collector2" -e "./TestDataCollector.exe -n DC2 -r tcp://$HOSTIP:$RCPORT -a 49002" &
 sleep 2
 ######################################################################
 # Example Producer 1
@@ -76,7 +76,7 @@ sleep 2
 # Example Producer 2
 ###############
 printf '\033[22;33m\t Example Producer 2 \033[0m \n'
-#xterm -sb -sl 1000 -geom 80x10-480-900 -fn fixed -T "Example Producer 2" -e "./ExampleProducer.exe -n DC2 -r tcp://$HOSTIP:$RCPORT" &
+xterm -sb -sl 1000 -geom 80x10-480-900 -fn fixed -T "Example Producer 2" -e "./ExampleProducer.exe -n DC2 -r tcp://$HOSTIP:$RCPORT" &
 sleep 2 
 
 ######################################################################
