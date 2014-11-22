@@ -150,7 +150,7 @@ extern "C" {
   DLLEXPORT PyProducer* PyProducer_new(char *name, char *rcaddress){return new PyProducer(std::string(name),std::string(rcaddress));}
   // functions for I/O
   DLLEXPORT void PyProducer_SendEvent(PyProducer *pp, uint8_t* buffer, size_t size){pp->SendEvent(buffer,size);}
-  }
+  
   DLLEXPORT char* PyProducer_GetConfigParameter(PyProducer *pp, char *item){
     std::string value = pp->GetConfigParameter(std::string(item));
     // convert string to char*

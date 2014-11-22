@@ -21,7 +21,7 @@ namespace eudaq {
 	public:
 		FileWriterText(const std::string &);
 		virtual void StartRun(unsigned);
-		virtual void WriteEvent(const DetectorEvent &);
+                virtual void WriteEvent(const DetectorEvent &);
 		virtual uint64_t FileBytes() const;
 		virtual ~FileWriterText();
 	private:

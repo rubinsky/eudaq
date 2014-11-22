@@ -22,7 +22,7 @@ void eudaq::multiResender::ProcessEvent(const DetectorEvent & devent)
   else{
     while (!getStarted())
     {
-      Sleep(20);
+      eudaq::mSleep(20);
     }
 
     for (unsigned i = 0; i < devent.NumEvents(); ++i)
@@ -62,7 +62,7 @@ void eudaq::multiResender::addProducer(std::shared_ptr<Event> ev)
   std::cout << "ProducerName: " << ProducerName << std::endl;
   m_producer.push_back(std::make_shared<resender>(ProducerName, m_runcontrol));
   m_producer.back()->setBoreEvent(ev);
-  Sleep(1000);
+  eudaq::mSleep(1000);
 }
 
 bool eudaq::multiResender::getStarted()

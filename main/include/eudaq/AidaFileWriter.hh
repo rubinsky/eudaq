@@ -7,7 +7,7 @@
 
 namespace eudaq {
 
-class JSON;
+  class JSON;
 
   class DLLEXPORT AidaFileWriter {
     public:

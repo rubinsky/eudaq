@@ -20,7 +20,8 @@ namespace eudaq {
     }
   }
 
-  void DetectorEvent::AddEvent(std::shared_ptr<Event>& evt) {
+ //  void DetectorEvent::AddEvent(std::shared_ptr<Event>& evt) {
+  void DetectorEvent::AddEvent(const std::shared_ptr<Event>& evt) {
     if (!evt.get()) EUDAQ_THROW("Adding null event!");
     m_events.push_back(evt);
     SetFlags(evt->GetFlags());

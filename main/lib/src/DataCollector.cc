@@ -88,7 +88,7 @@ namespace eudaq {
       if (!m_writer) {
         EUDAQ_THROW("You must configure before starting a run");
       }
-      m_writer->StartRun( m_name, runnumber, buildJsonConfigHeader( runnumber ) );
+      m_writer->StartRun( m_name, runnumber,  buildJsonConfigHeader( runnumber ) );
       WriteToFile(m_runnumberfile, runnumber);
       m_runnumber = runnumber;
       m_eventnumber = 0;
@@ -202,29 +202,6 @@ namespace eudaq {
     }
   }
 
-  void DataCollector::WriteEvent( const DetectorEvent & ev ) {
-	  auto packet = std::shared_ptr<AidaPacket>( new EventPacket( ev ) );
-	  packet->SetPacketNumber( ++m_packetNumberLastPacket );
-	  WritePacket( packet );
-	  // std::cout << ev << std::endl;
-	  ++m_eventnumber;
-  }
-
-  void DataCollector::WritePacket( std::shared_ptr<AidaPacket> packet ) {
-	  if (m_writer.get()) {
-		  try {
-			  m_packetNumberLastPacket = packet->GetPacketNumber();
-			  m_writer->WritePacket( packet );
-		  } catch(const Exception & e) {
-			  std::string msg = "Exception writing to file: ";
-			  msg += e.what();
-			  EUDAQ_ERROR(msg);
-			  SetStatus(Status::LVL_ERROR, msg);
-		  }
-	  } else {
-		  EUDAQ_ERROR("Event received before start of run");
-	  }
-  }
 
   size_t DataCollector::GetInfo(const ConnectionInfo & id) {
     for (size_t i = 0; i < m_buffer.size(); ++i) {

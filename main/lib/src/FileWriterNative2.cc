@@ -14,6 +14,8 @@ namespace eudaq {
       virtual uint64_t FileBytes() const;
       virtual ~FileWriterNative2();
     private:
+      void OpenNextRaw();
+
       BufferSerializer m_buf;
       FileSerializer * m_ser;
   };
@@ -32,6 +34,7 @@ namespace eudaq {
     unsigned versiontag = Event::str2id("VER2");
     m_ser->write(versiontag);
   }
+
 
   void FileWriterNative2::WriteEvent(const DetectorEvent & ev) {
     if (!m_ser) EUDAQ_THROW("FileWriterNative: Attempt to write unopened file");

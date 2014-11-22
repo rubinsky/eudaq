@@ -60,8 +60,8 @@ namespace eudaq {
             return Event_IS_Sync;
           }
 
-          max_ret = max(max_ret, ret);
-          min_ret = min(min_ret, ret);
+          max_ret = std::max(max_ret, ret);
+          min_ret = std::min(min_ret, ret);
         }
 
         m_triggerIndexCounter = 0;
@@ -200,8 +200,8 @@ namespace eudaq {
 			  {
 				  return Event_IS_Sync;
 			  }
-			  maxRet = max(maxRet, ret);
-			  minRet = min(minRet, ret);
+			  maxRet = std::max(maxRet, ret);
+			  minRet = std::min(minRet, ret);
 		  }
 
 		  if (minRet == maxRet)
@@ -330,8 +330,8 @@ namespace eudaq {
 			  {
 				  return Event_IS_Sync;
 			  }
-			  maxRet = max(maxRet, ret);
-			  minRet = min(minRet, ret);
+			  maxRet = std::max(maxRet, ret);
+			  minRet = std::min(minRet, ret);
 		  }
 
         if (minRet==maxRet)

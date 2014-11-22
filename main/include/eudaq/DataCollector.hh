@@ -10,6 +10,11 @@
 #include "eudaq/CommandReceiver.hh"
 #include "eudaq/Event.hh"
 #include "eudaq/FileWriter.hh"
+
+#include "eudaq/DetectorEvent.hh"
+#include "eudaq/AidaPacket.hh"
+#include "eudaq/AidaFileWriter.hh"
+
 #include "eudaq/Configuration.hh"
 #include "eudaq/Utils.hh"
 #include "eudaq/Platform.hh"
@@ -42,14 +47,13 @@ class JSON;
 
       void DataThread();
     protected:
-      void WriteEvent( const DetectorEvent & ev );
-      void WritePacket( std::shared_ptr<AidaPacket> packet );
       std::shared_ptr<JSON> buildJsonConfigHeader( unsigned int runnumber );
 
     private:
       struct Info {
        std::shared_ptr<ConnectionInfo> id;
         std::list<std::shared_ptr<Event> > events;
+        std::list<std::shared_ptr<AidaPacket> > packets;
       };
 
       const std::string m_runnumberfile; // path to the file containing the run number

@@ -229,7 +229,7 @@ void SyncBase::makeDetectorEvent()
     }
     else
     {
-      det->AddEvent(std::shared_ptr<Event>(nullptr));
+      det->AddEvent(std::shared_ptr<Event> (nullptr) );
     }
     
 

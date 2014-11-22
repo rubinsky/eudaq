@@ -9,10 +9,13 @@ namespace eudaq {
     public:
       FileWriterNative(const std::string &);
       virtual void StartRun(unsigned);
+      virtual void StartRun( const std::string & name, unsigned int runnumber, std::shared_ptr<JSON> config );
       virtual void WriteEvent(const DetectorEvent &);
       virtual uint64_t FileBytes() const;
       virtual ~FileWriterNative();
     private:
+      void OpenNextRaw();
+
       FileSerializer * m_ser;
   };
 
@@ -28,6 +31,36 @@ namespace eudaq {
     delete m_ser;
     m_ser = new FileSerializer(FileNamer(m_filepattern).Set('X', ".raw").Set('R', runnumber));
   }
+
+  void FileWriterNative::StartRun( const std::string & name, unsigned int runnumber, std::shared_ptr<JSON> config )
+  {
+	m_name = name;
+	m_runNumber = runnumber;
+	m_config = config;
+	m_fileNumber = 0;
+
+	OpenNextRaw();
+  }
+
+  void FileWriterNative::OpenNextRaw() {
+	m_fileNumber += 1;
+	if ( m_ser ) {
+		m_ser->Flush();
+		delete m_ser;
+	}
+    m_ser = new FileSerializer(FileNamer(m_filepattern).Set('X', ".raw").Set( 's', "_" ).Set('i', m_fileNumber ).Set('R', m_runNumber).Set('N', m_name));
+
+    // std::cout << "JSON: " << header << std::endl;
+/* book for the run header as JSON string: very useful thing
+    std::string header = m_config->to_string();
+    while ( header.length() % 8 )
+    	header += ' ';
+    m_ser->write( header );
+*/
+    m_ser->Flush();
+
+  }
+
 
   void FileWriterNative::WriteEvent(const DetectorEvent & ev) {
     if (!m_ser) EUDAQ_THROW("FileWriterNative: Attempt to write unopened file");

@@ -10,6 +10,7 @@ namespace eudaq {
     public:
       FileWriterStandard(const std::string &);
       virtual void StartRun(unsigned);
+      virtual void StartRun( const std::string & name, unsigned int runnumber, std::shared_ptr<JSON> config ) {}
       virtual void WriteEvent(const DetectorEvent &);
       virtual uint64_t FileBytes() const;
       virtual ~FileWriterStandard();
